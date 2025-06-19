@@ -30,13 +30,13 @@ async function run() {
 
     app.post("/api/events", async (req, res) => {
       try {
-        const { title, description, time, bg_img, img } = req.body;
+        const { title, description, time, url, img } = req.body;
 
         const event = {
           title,
           description,
           time,
-          bg_img,
+          url,
           img,
           dateTime: new Date(),
         };
