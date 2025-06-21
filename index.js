@@ -1,9 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const bcrypt = require("bcrypt");
 const { MongoClient } = require("mongodb");
-const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 
 const app = express();
@@ -106,6 +104,40 @@ async function run() {
         res
           .status(500)
           .json({ error: "Failed to insert data", message: error.message });
+      }
+    });
+
+    app.get("/api/news/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Validate and convert to ObjectId
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid ID format" });
+        }
+
+        const news = await NewsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!news) {
+          return res.status(404).json({ error: "News not found" });
+        }
+
+        res.status(200).json(news);
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to fetch news", message: error.message });
+      }
+    });
+
+    app.get("/api/news", async (req, res) => {
+      try {
+        const news = await NewsCollection.find().toArray();
+        res.status(200).json(news);
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to fetch news", message: error.message });
       }
     });
 
