@@ -27,6 +27,7 @@ async function run() {
     await client.connect();
     const db = client.db("Sakil-Starto");
     const BlogCollection = db.collection("Blog");
+    const NewsCollection = db.collection("News");
 
     app.post("/api/events", async (req, res) => {
       try {
@@ -83,6 +84,28 @@ async function run() {
         res
           .status(500)
           .json({ error: "Failed to fetch event", message: error.message });
+      }
+    });
+
+    app.post("/api/news", async (req, res) => {
+      try {
+        const { tag, tagColor, title, description, image } = req.body;
+
+        const news = {
+          tag,
+          tagColor,
+          title,
+          description,
+          image,
+          createdAt: new Date(), // optional timestamp
+        };
+
+        const result = await NewsCollection.insertOne(news); // make sure NewsCollection is defined properly
+        res.status(201).json({ insertedId: result.insertedId, ...news });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to insert data", message: error.message });
       }
     });
 
