@@ -50,6 +50,53 @@ async function run() {
       }
     });
 
+    app.put("/api/events/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        if (updateData.dateTime) {
+          updateData.dateTime = new Date(updateData.dateTime);
+        }
+
+        const result = await eventsCollection.findOneAndUpdate(
+          { _id: new ObjectId(id) },
+          { $set: updateData },
+          { returnDocument: "after" }
+        );
+
+        if (!result.value) {
+          return res.status(404).json({ error: "Event not found" });
+        }
+
+        res.json(result.value);
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to update event", message: error.message });
+      }
+    });
+
+    // Delete event by ID
+    app.delete("/api/events/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const result = await eventsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ error: "Event not found" });
+        }
+
+        res.json({ message: "Event deleted successfully" });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to delete event", message: error.message });
+      }
+    });
+
     // GET route to fetch all events
     app.get("/api/events", async (req, res) => {
       try {
