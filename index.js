@@ -59,7 +59,7 @@ async function run() {
           updateData.dateTime = new Date(updateData.dateTime);
         }
 
-        const result = await eventsCollection.findOneAndUpdate(
+        const result = await BlogCollection.findOneAndUpdate(
           { _id: new ObjectId(id) },
           { $set: updateData },
           { returnDocument: "after" }
@@ -81,7 +81,9 @@ async function run() {
     app.delete("/api/events/:id", async (req, res) => {
       try {
         const { id } = req.params;
-        const result = await eventsCollection.deleteOne({
+        console.log(`Deleting event with ID: ${new ObjectId(id)}`);
+
+        const result = await BlogCollection.deleteOne({
           _id: new ObjectId(id),
         });
 
