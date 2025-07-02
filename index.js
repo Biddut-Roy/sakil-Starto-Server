@@ -111,6 +111,7 @@ async function run() {
       }
     });
 
+    // get event by ID
     app.get("/api/events/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -156,6 +157,7 @@ async function run() {
       }
     });
 
+    // get news by ID
     app.get("/api/news/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -179,6 +181,7 @@ async function run() {
       }
     });
 
+    // GET route to fetch all news
     app.get("/api/news", async (req, res) => {
       try {
         const news = await NewsCollection.find().toArray();
@@ -187,6 +190,55 @@ async function run() {
         res
           .status(500)
           .json({ error: "Failed to fetch news", message: error.message });
+      }
+    });
+
+    // Update News by ID
+    app.patch("/api/news/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { title, image } = req.body;
+
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (image !== undefined) updateData.image = image;
+
+        const result = await NewsCollection.findOneAndUpdate(
+          { _id: new ObjectId(id) },
+          { $set: updateData },
+          { returnDocument: "after" }
+        );
+
+        if (!result.value) {
+          return res.status(404).json({ error: "News not found" });
+        }
+
+        res.json(result.value);
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to update news", message: error.message });
+      }
+    });
+
+    // Delete News by ID
+    app.delete("/api/news/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const result = await NewsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ error: "News not found" });
+        }
+
+        res.json({ message: "News deleted successfully" });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to delete news", message: error.message });
       }
     });
 
