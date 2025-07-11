@@ -293,14 +293,10 @@ async function run() {
         }
 
         const result = await CarouseCollection.findOneAndUpdate(
-          { _id: id ? new ObjectId(id) : null },
+          { _id: new ObjectId(id) },
           { $set: updateData },
           { returnDocument: "after" } // Returns the updated document
         );
-
-        if (!result.value) {
-          return res.status(404).json({ error: "Carousel item not found" });
-        }
 
         res.status(200).json(result.value);
       } catch (error) {
