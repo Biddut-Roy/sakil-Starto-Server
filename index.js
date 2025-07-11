@@ -26,6 +26,7 @@ async function run() {
     const db = client.db("Sakil-Starto");
     const BlogCollection = db.collection("Blog");
     const NewsCollection = db.collection("News");
+    const CarouseCollection = db.collection("carouse");
 
     app.post("/api/events", async (req, res) => {
       try {
@@ -239,6 +240,114 @@ async function run() {
         res
           .status(500)
           .json({ error: "Failed to delete news", message: error.message });
+      }
+    });
+
+    //CarouseCollection routes
+    app.post("/api/carouse", async (req, res) => {
+      try {
+        const { title, description, image } = req.body;
+
+        const carouse = {
+          title,
+          description,
+          image,
+          createdAt: new Date(), // optional timestamp
+        };
+
+        const result = await CarouseCollection.insertOne(carouse);
+        res.status(201).json({ insertedId: result.insertedId, ...carouse });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to insert data", message: error.message });
+      }
+    });
+
+    app.get("/api/carouse", async (req, res) => {
+      try {
+        const carouse = await CarouseCollection.find().toArray();
+        res.status(200).json(carouse);
+      } catch (error) {
+        res
+          .status(500)
+          .json({ error: "Failed to fetch carouse", message: error.message });
+      }
+    });
+
+    // Update a carousel item (PUT for full update, PATCH for partial)
+    app.put("/api/carouse/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const Data = req.body;
+
+        const updateData = {};
+        if (Data.title !== undefined) updateData.title = Data.title;
+        if (Data.description !== undefined)
+          updateData.description = Data.description;
+        if (Data.image !== undefined) updateData.image = Data.image;
+
+        // Validate ID format
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid ID format" });
+        }
+
+        const result = await CarouseCollection.findOneAndUpdate(
+          { _id: id ? new ObjectId(id) : null },
+          { $set: updateData },
+          { returnDocument: "after" } // Returns the updated document
+        );
+
+        if (!result.value) {
+          return res.status(404).json({ error: "Carousel item not found" });
+        }
+
+        res.status(200).json(result.value);
+      } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).json({
+          error: "Failed to update carousel item",
+          message: error.message,
+        });
+      }
+    });
+
+    // Delete a carousel item
+    app.delete("/api/carouse/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        // Validate ID format
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid ID format",
+          });
+        }
+
+        const result = await CarouseCollection.findOneAndDelete({
+          _id: new ObjectId(id),
+        });
+
+        if (!result.value) {
+          return res.status(404).json({
+            success: false,
+            error: "Carousel item not found",
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          data: result.value,
+          message: "Carousel item deleted successfully",
+        });
+      } catch (error) {
+        console.error("Delete error:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to delete carousel item",
+          message: error.message,
+        });
       }
     });
 
