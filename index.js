@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
@@ -14,10 +15,7 @@ app.use(express.json());
 
 // MongoDB Connection URL
 const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const client = new MongoClient(uri, {});
 
 async function run() {
   try {
@@ -54,31 +52,38 @@ async function run() {
     app.put("/api/events/:id", async (req, res) => {
       try {
         const { id } = req.params;
-        const updateData = req.body;
+        let updateData = req.body;
 
+        // Remove _id from updateData if it exists
+        if (updateData._id) {
+          delete updateData._id; // Prevent attempting to modify the immutable _id field
+        }
+
+        // Convert dateTime if provided
         if (updateData.dateTime) {
           updateData.dateTime = new Date(updateData.dateTime);
         }
 
         const result = await BlogCollection.findOneAndUpdate(
-          { _id: new ObjectId(id) },
+          { _id: new ObjectId(id) }, // Use the ID from URL params
           { $set: updateData },
           { returnDocument: "after" }
         );
 
-        if (!result.value) {
+        if (!result) {
           return res.status(404).json({ error: "Event not found" });
         }
 
-        res.json(result.value);
+        res.json(result);
       } catch (error) {
-        res
-          .status(500)
-          .json({ error: "Failed to update event", message: error.message });
+        console.error("Update error:", error);
+        res.status(500).json({
+          error: "Failed to update event",
+          message: error.message,
+        });
       }
     });
 
-    // Delete event by ID
     app.delete("/api/events/:id", async (req, res) => {
       try {
         const { id } = req.params;
